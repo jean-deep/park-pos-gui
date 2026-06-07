@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Manual de usuario completo para la aplicación de caja POS del sistema de estacionamiento Parkeate.">
+  <title>Manual POS - Parkeate</title>
+  <style>
+    /* VARIABLES DE DISEÑO (CSS Custom Properties) */
+    :root {
+      /* Tema Oscuro (Por Defecto) */
+      --bg-color: #060719;
+      --card-bg: rgba(15, 16, 43, 0.65);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-color: #f1f3f9;
+      --text-muted: #9ba1b4;
+      --primary-navy: #080935;
+      --brand-blue: #003B95;
+      --accent-lime: #bfff00;
+      --accent-lime-rgb: 191, 255, 0;
+      --sidebar-width: 340px;
+      --header-height: 70px;
+      --font-title: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .light-theme {
+      /* Tema Claro */
+      --bg-color: #f6f8fc;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --card-border: rgba(0, 0, 0, 0.08);
+      --text-color: #1e293b;
+      --text-muted: #64748b;
+      --primary-navy: #0f172a;
+      --brand-blue: #0284c7;
+      --accent-lime: #0ea5e9;
+      --accent-lime-rgb: 14, 165, 233;
+      --shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.06);
+    }
+
+    /* ESTILOS BASE */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      transition: background-color var(--transition), color var(--transition);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* SCROLLBARS PERSONALIZADOS */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--card-border);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    /* ENCABEZADO SUPERIOR */
+    header#main-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: var(--header-height);
+      background-color: var(--primary-navy);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+      z-index: 1000;
+      box-shadow: var(--shadow);
+    }
+
+    .brand-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 1.35rem;
+      color: #fff;
+    }
+
+    .brand-logo svg {
+      fill: var(--accent-lime);
+      width: 26px;
+      height: 26px;
+      transition: var(--transition);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* Barra de Búsqueda */
+    .search-container {
+      position: relative;
+      width: 320px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 8px 12px 8px 36px;
+      color: #fff;
+      font-size: 0.9rem;
+      transition: var(--transition);
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-lime);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 2px rgba(var(--accent-lime-rgb), 0.2);
+    }
+
+    .search-container svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      stroke: var(--text-muted);
+      stroke-width: 2.5;
+      fill: none;
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: none;
+    }
+
+    /* Tracker de Progreso */
+    .progress-widget {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      font-size: 0.8rem;
+    }
+
+    .progress-bar-container {
+      width: 100px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent-lime);
+      width: 0%;
+      transition: width 0.4s ease-out;
+    }
+
+    /* Switcher de Tema */
+    .theme-toggle {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      cursor: pointer;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: scale(1.05);
+    }
+
+    .theme-toggle svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: #fff;
+      stroke-width: 2;
+    }
+
+    /* CONTENEDOR PRINCIPAL */
+    #app-container {
+      display: flex;
+      margin-top: var(--header-height);
+      min-height: calc(100vh - var(--header-height));
+    }
+
+    /* BARRA LATERAL (SIDEBAR DE NAVEGACIÓN FIJO) */
+    #sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--primary-navy);
+      border-right: 1px solid var(--card-border);
+      height: calc(100vh - var(--header-height));
+      position: fixed;
+      left: 0;
+      top: var(--header-height);
+      display: flex;
+      flex-direction: column;
+      z-index: 900;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 15px;
+    }
+
+    .etapa-group {
+      margin-bottom: 15px;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.12);
+    }
+
+    .etapa-header {
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.02);
+      font-family: var(--font-title);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--card-border);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .step-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-step-item {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      border-left: 3px solid transparent;
+      text-decoration: none;
+    }
+
+    .sidebar-step-item:hover {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-color);
+    }
+
+    .sidebar-step-item.active {
+      background: rgba(255, 255, 255, 0.04);
+      color: #fff;
+      border-left-color: var(--accent-lime);
+      font-weight: 600;
+    }
+
+    /* Checkbox de leídos en Sidebar */
+    .step-checkbox {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1.5px solid var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      background: none;
+      flex-shrink: 0;
+    }
+
+    .step-checkbox.checked {
+      background-color: var(--accent-lime);
+      border-color: var(--accent-lime);
+    }
+
+    .step-checkbox svg {
+      width: 9px;
+      height: 9px;
+      fill: none;
+      stroke: #000;
+      stroke-width: 4;
+      display: none;
+    }
+
+    .step-checkbox.checked svg {
+      display: block;
+    }
+
+    /* PANEL DE CONTENIDO (MAIN CONTENT) */
+    #content-panel {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 50px;
+    }
+
+    /* ESTILO DE CADA TARJETA DE PASO */
+    .step-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+      scroll-margin-top: 90px; /* offset para no quedar oculto bajo el header */
+      transition: border-color var(--transition), box-shadow var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .step-card:hover {
+      border-color: rgba(var(--accent-lime-rgb), 0.3);
+    }
+
+    .step-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 15px;
+    }
+
+    .step-title-area {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stage-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(var(--accent-lime-rgb), 0.12);
+      color: var(--accent-lime);
+      border: 1px solid rgba(var(--accent-lime-rgb), 0.25);
+      letter-spacing: 0.5px;
+    }
+
+    .step-main-title {
+      font-family: var(--font-title);
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Botón Marcar Leído */
+    .read-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      color: var(--text-color);
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+
+    .read-btn:hover {
+      background: rgba(var(--accent-lime-rgb), 0.08);
+      border-color: var(--accent-lime);
+    }
+
+    .read-btn.active {
+      background: var(--accent-lime);
+      color: #000;
+      border-color: var(--accent-lime);
+    }
+
+    .read-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 3;
+    }
+
+    /* Sección de Contenido */
+    .step-content-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 30px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .step-content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .image-container {
+      background-color: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      cursor: zoom-in;
+      border: 1px solid var(--card-border);
+    }
+
+    .image-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: var(--transition);
+    }
+
+    .image-container:hover img {
+      transform: scale(1.02);
+    }
+
+    .text-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .step-description {
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-color);
+      border-left: 3px solid var(--accent-lime);
+      padding-left: 14px;
+    }
+
+    /* Tabla de Detalles */
+    .details-table-wrapper {
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.8rem;
+    }
+
+    .details-table th, .details-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .details-table th {
+      background: rgba(255, 255, 255, 0.02);
+      font-family: var(--font-title);
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .details-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .detail-term {
+      font-weight: 700;
+      color: var(--accent-lime);
+      white-space: nowrap;
+    }
+
+    .detail-def {
+      color: var(--text-color);
+      line-height: 1.4;
+    }
+
+    /* MODO BÚSQUEDA */
+    .step-card.hidden {
+      display: none;
+    }
+
+    /* RESALTADO DE BÚSQUEDA (HIGHLIGHT) */
+    mark {
+      background-color: rgba(var(--accent-lime-rgb), 0.35);
+      color: inherit;
+      font-weight: bold;
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    /* VISOR LIGHTBOX (ZOOM) */
+    #lightbox {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(4, 5, 15, 0.93);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    #lightbox.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    #lightbox-image {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 8px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.8);
+      transform: scale(0.95);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #lightbox.active #lightbox-image {
+      transform: scale(1);
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #fff;
+      transition: var(--transition);
+    }
+
+    .lightbox-close:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: rotate(90deg);
+    }
+
+    .lightbox-close svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.5;
+    }
+
+    /* BOTÓN DE MENÚ HAMBURGUESA (MÓVIL) */
+    .menu-hamburger {
+      display: none;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-color);
+      box-shadow: var(--shadow);
+    }
+
+    .menu-hamburger svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.5;
+    }
+
+    /* RESPONSIVE DESIGN (MEDIA QUERIES) */
+    @media (max-width: 768px) {
+      .menu-hamburger {
+        display: flex;
+      }
+
+      #sidebar {
+        transform: translateX(-100%);
+        top: var(--header-height);
+        height: calc(100vh - var(--header-height));
+      }
+
+      #sidebar.mobile-open {
+        transform: translateX(0);
+      }
+
+      #content-panel {
+        margin-left: 0;
+        padding: 20px;
+      }
+
+      #sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        width: 100vw;
+        height: calc(100vh - var(--header-height));
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 800;
+      }
+
+      #sidebar.mobile-open + #sidebar-overlay {
+        display: block;
+      }
+
+      .search-container {
+        width: 180px;
+      }
+      
+      .progress-widget {
+        display: none; /* Ocultar barra de progreso pequeña en móvil */
+      }
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ELEMENTOS SVG COMUNES -->
+  <svg style="display: none;">
+    <g id="icon-check">
+      <path d="M20 6L9 17l-5-5"/>
+    </g>
+    <g id="icon-search">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </g>
+    <g id="icon-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </g>
+    <g id="icon-moon">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </g>
+    <g id="icon-hamburger">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </g>
+    <g id="icon-close">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </g>
+    <g id="icon-logo">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/>
+    </g>
+  </svg>
+
+  <!-- CABECERA PRINCIPAL -->
+  <header id="main-header">
+    <div class="brand-area">
+      <button class="menu-hamburger" onclick="toggleMobileSidebar()" aria-label="Abrir menú de navegación">
+        <svg viewBox="0 0 24 24"><use href="#icon-hamburger"/></svg>
+      </button>
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24"><use href="#icon-logo"/></svg>
+        <span>Manual POS</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="search-container">
+        <svg viewBox="0 0 24 24"><use href="#icon-search"/></svg>
+        <input type="text" id="search-box" class="search-input" placeholder="Buscar en el manual..." aria-label="Buscar en el manual">
+        <button id="search-clear-btn" class="search-clear" aria-label="Limpiar búsqueda">&times;</button>
+      </div>
+
+      <div class="progress-widget">
+        <span>Progreso</span>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+        <span id="progress-percent">0%</span>
+      </div>
+
+      <button class="theme-toggle" id="theme-toggle-btn" aria-label="Alternar modo claro/oscuro">
+        <svg viewBox="0 0 24 24" id="theme-icon"><use href="#icon-moon"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="app-container">
+    
+    <!-- BARRA LATERAL FIJA -->
+    <aside id="sidebar" role="navigation" aria-label="Navegación del manual">
+      <div class="sidebar-scroll" id="sidebar-accordion">
+        <!-- Generado dinámicamente -->
+      </div>
+    </aside>
+
+    <div id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+    <!-- PANEL DE CONTENIDO CENTRAL -->
+    <main id="content-panel">
+      <!-- Los pasos se renderizarán dinámicamente aquí -->
+    </main>
+
+  </div>
+
+  <!-- VISOR DE IMAGEN (LIGHTBOX) -->
+  <div id="lightbox" onclick="closeLightbox()" role="dialog" aria-modal="true" aria-label="Visor de imagen a pantalla completa">
+    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Cerrar vista de pantalla completa">
+      <svg viewBox="0 0 24 24"><use href="#icon-close"/></svg>
+    </button>
+    <img id="lightbox-image" src="" alt="Captura ampliada en pantalla completa" onclick="event.stopPropagation()">
+  </div>
+
+  <!-- LÓGICA DE PROGRAMACIÓN JAVASCRIPT -->
+  <script>
+    /* BASE DE DATOS DE ETAPAS */
+    const etapas = {
+      1: "Etapa 1: Configuración Técnica",
+      2: "Etapa 2: Inicio del Turno",
+      3: "Etapa 3: Operaciones de Cobro",
+      4: "Etapa 4: Casos Especiales e Incidencias",
+      5: "Etapa 5: Cierre del Turno y Caja"
+    };
+
+    const stepsData = [
+      {
+        id: 1,
+        title: "Paso 01: Registro de Aplicación",
+        etapa: 1,
+        image: "assets/01_registro_aplicacion.jpg",
+        desc: "Esta pantalla inicial permite configurar y enlazar la terminal física (POS, computadora) con el servidor del estacionamiento local (PLS - Parking Lot Server). Es un paso exclusivamente técnico que se realiza antes de iniciar operaciones.",
+        details: [
+          ["Logo \"P\" de Parkeate", "Identificador visual de la marca en color verde lima sobre un recuadro azul marino."],
+          ["Campo \"Ingrese su código de registro\"", "Campo de texto donde el técnico introduce el código identificador de la terminal asignada en el sistema (ej. 7f10dc)."],
+          ["Campo \"Ingrese dirección de servidor\"", "Dirección IP y puerto del servidor local (PLS) al cual se conectará el POS (ej. http://4.153.231.212:3000)."],
+          ["REGISTRAR APLICACIÓN", "Valida los datos ingresados y realiza la petición de emparejamiento. Si es exitosa, guarda la configuración en la base de datos local y habilita la pantalla de Login."],
+          ["Volver", "Cancela el proceso y regresa a la pantalla previa. Solo se muestra si la aplicación ya está registrada, no en la pantalla de registro inicial."]
+        ]
+      },
+      {
+        id: 2,
+        title: "Paso 02: Inicio de Sesión (Login)",
+        etapa: 2,
+        image: "assets/02_login.jpg",
+        desc: "Una vez que la aplicación está registrada en el servidor, los usuarios (cajeros y administradores) pueden acceder ingresando sus credenciales autorizadas desde el Backoffice.",
+        details: [
+          ["Cabecera Azul Marino", "Barra superior de la aplicación que contiene el ícono del menú de hamburguesa en el extremo izquierdo."],
+          ["Campo \"Usuario\"", "Campo de texto para ingresar el nombre de usuario asignado."],
+          ["Campo \"Contraseña\"", "Campo de entrada oculto por defecto con un ícono de ojo a la derecha para alternar la visibilidad de los caracteres."],
+          ["INICIAR SESIÓN", "Envía las credenciales al servidor para su validación. Al autenticar con éxito, abre la pantalla principal de cobro."],
+          ["Panel Desplazable Inferior (Sesiones)", "Permite vislumbrar información rápida sobre las sesiones activas en el dispositivo."]
+        ]
+      },
+      {
+        id: 3,
+        title: "Paso 03: Menú Lateral del Login",
+        etapa: 2,
+        image: "assets/03_menu_lateral_login.jpg",
+        desc: "Accesible desde la pantalla de login haciendo clic en las tres líneas horizontales (hamburguesa) del extremo superior izquierdo. Este panel contiene herramientas administrativas y de diagnóstico de hardware específicas antes de iniciar sesión.",
+        details: [
+          ["Usuarios", "Permite listar los usuarios habilitados. Abre la pantalla de consulta de cajeros autorizados cargados en el POS local."],
+          ["Sesiones", "Muestra un listado de usuarios activos. Permite monitorear quiénes tienen una sesión abierta o en ejecución."],
+          ["Fiscal - probar", "Probar Impresora fiscal. Ejecuta un comando de prueba en la impresora fiscal conectada a la computadora para verificar que esté en línea y lista para imprimir facturas y reportes."],
+          ["Fiscal - conexión", "Reconectar Impresora fiscal. Intenta restablecer el canal de comunicación (puerto serial/USB) entre la computadora y la impresora fiscal en caso de desconexión."],
+          ["Registrar Aplicación", "Permite registrar su app con su código único de identificación. Redirecciona al técnico a la Pantalla 01 para cambiar el servidor o reconfigurar la terminal."]
+        ]
+      },
+      {
+        id: 4,
+        title: "Paso 04: Lista de Usuarios POS",
+        etapa: 2,
+        image: "assets/04_lista_usuarios.jpg",
+        desc: "Pantalla de consulta que muestra las fichas de los cajeros y personal administrativo registrados localmente en el dispositivo.",
+        details: [
+          ["Barra de Título Azul", "Contiene el botón de flecha de retorno (<-) a la izquierda, el título centrado y la lupa de búsqueda rápida a la derecha."],
+          ["Fichas de Usuario (Tarjetas Blancas)", "Muestran el Nombre Completo, Usuario (username en verde), Nro. ID, Email y fechas de Creación y Edición del usuario."],
+          ["Avatar Corporativo", "Ícono \"P\" de Parkeate a la izquierda para identificar visualmente la cuenta local."]
+        ]
+      },
+      {
+        id: 5,
+        title: "Paso 05: Pantalla Principal del POS",
+        etapa: 3,
+        image: "assets/05_pantalla_principal.jpg",
+        desc: "Es la interfaz operativa del día a día del cajero. Está diseñada para ser clara, rápida y contener todos los flujos de cobro en una sola vista para evitar distracciones.",
+        details: [
+          ["Barra de Cabecera", "Menú lateral de hamburguesa, marca en el centro e indicadores a la derecha (Nube para conexión de nube y Círculo para servidor local PLS, ambos sirven como guía orientativa ante latencia de red)."],
+          ["Barra de Acciones (10 Botones)", "Arqueo de Cierre de Caja (Supervisor), Pre-cierre/Corte (Supervisor), Ventana de Cliente, Cambiar Tarifa (Convenios), Paquetes (Locatarios/SuperApp), Generar Ticket Manual (Supervisor), Buscar ticket QR dañado, Facturas (consultar/reimprimir), Ticket perdido y Pagar."],
+          ["Panel Informativo (Metadatos)", "Campos del ticket escaneado (Entrada, Hora pago del PLS, Cajero, Nº Ticket de 12 dígitos AAMMDD-BB-XXXX) e información fiscal del cliente con la tasa cambiaria BCV activa."],
+          ["Rejilla de Facturación", "Grilla con los renglones cobrados: SKU, correlativo de ticket, nombre de tarifa, cantidad, precio unitario, IVA y total neto."],
+          ["Totalizador Multimoneda", "Esquina inferior izquierda que desglosa el IGTF (3%), I.V.A., Subtotal y la banda negra resaltada con el Total a pagar en Bolívares (Bs) y dólares de Referencia (Ref)."],
+          ["Panel de Cámaras y LPR", "Muestra fotos de seguridad (hasta 3 cámaras: frontal, trasera, panorámica) y la lectura digital automática de la placa OCR (LPR)."]
+        ]
+      },
+      {
+        id: 6,
+        title: "Paso 06: Acceso / Permiso de Supervisor",
+        etapa: 4,
+        image: "assets/06_permiso_supervisor.jpg",
+        desc: "Esta ventana modal de seguridad bloquea la pantalla cuando el cajero intenta realizar una acción crítica que requiere autorización (por ejemplo, Cierre de caja, Pre-cierre o Generar Ticket manual).",
+        details: [
+          ["Escanear Código QR (Recomendado)", "El supervisor puede escanear un código QR dinámico desde la App de Supervisor instalada en su teléfono móvil para autorizar la acción al instante sin teclear nada."],
+          ["Ingreso Manual de Credenciales", "El supervisor introduce su nombre de usuario (Username) y clave (Password) creados previamente en el Backoffice y presiona el botón Acceder."]
+        ]
+      },
+      {
+        id: 7,
+        title: "Paso 07: Menú Principal - Fiscal y Reportes",
+        etapa: 4,
+        image: "assets/07_menu_lateral_principal_01.jpg",
+        desc: "Se despliega desde la interfaz de cobro principal y contiene herramientas avanzadas de control de caja y opciones fiscales de la impresora fiscal conectada al terminal.",
+        details: [
+          ["Diagnóstico de Hardware", "Probar Impresora fiscal / Reconectar Impresora fiscal para reestablecer comunicaciones seriales o USB."],
+          ["Configuración", "Ajustes de puertos de la impresora fiscal."],
+          ["Auditoría Histórica Z", "Imprimir último cierre / Historial de cierres de caja para reimprimir reportes Z directamente desde la memoria fiscal."],
+          ["Copia de Documentos", "Reimprimir último ticket / Reimprimir última factura en caso de fallas de papel durante la operación ordinaria."],
+          ["Reporte X", "Emite el precierre de auditoría fiscal (reporte de ventas parciales acumuladas sin borrar memoria de trabajo)."],
+          ["Memoria fiscal por fecha", "Descarga e imprime reportes fiscales en un rango de fechas directamente de la memoria física del equipo."]
+        ]
+      },
+      {
+        id: 8,
+        title: "Paso 08: Menú Principal - Megasoft y Cierre",
+        etapa: 4,
+        image: "assets/08_menu_lateral_principal_02.jpg",
+        desc: "Segunda sección del menú lateral principal que maneja las pasarelas bancarias y opciones de sesión.",
+        details: [
+          ["Megasoft Miscelaneos", "Cargos de transacciones bancarias auxiliares."],
+          ["Megasoft Anulación", "Permite anular una transacción de tarjeta de débito/crédito directamente en el datáfono integrado."],
+          ["Megasoft Último voucher", "Reimpresión del comprobante del banco del último cobro procesado por punto."],
+          ["Megasoft Precierre / Último Cierre", "Conciliación financiera final de la pasarela Megasoft."],
+          ["Activar Facturación digital", "Alterna la emisión entre factura térmica física en papel o factura electrónica (digital)."],
+          ["Gestión de Cuenta", "Opción para Cambiar Contraseña y Cerrar Sesión del cajero activo."]
+        ]
+      },
+      {
+        id: 9,
+        title: "Paso 09: Buscar Cliente (Factura Fiscal)",
+        etapa: 3,
+        image: "assets/09_buscar_cliente.jpg",
+        desc: "Permite al operador buscar y asociar un perfil fiscal (nombre, RIF, teléfono) a la transacción de cobro actual para emitir facturas con valor tributario personalizado.",
+        details: [
+          ["Búsqueda en tiempo real", "Se escribe el documento o nombre del cliente en el campo de búsqueda (ej. deepcompany)."],
+          ["Selección (+)", "Si el cliente ya existe, se presiona el botón azul (+) al final del renglón para vincularlo al ticket actual. Sus datos se reflejarán automáticamente en el panel de metadatos de la pantalla principal."],
+          ["Creación (Usuario +)", "Si no se encuentra ningún resultado, se presiona el botón azul con el ícono de Usuario + para registrar sus datos."]
+        ]
+      },
+      {
+        id: 10,
+        title: "Paso 10: Registrar Cliente Nuevo",
+        etapa: 3,
+        image: "assets/10_registrar_cliente.jpg",
+        desc: "Pantalla con formulario completo para dar de alta en la base de datos a un cliente eventual que requiere factura personalizada y no estaba registrado previamente.",
+        details: [
+          ["Prefijo de Documento", "Menú desplegable para seleccionar el tipo de identificación (ej. J para Jurídico/R.I.F., V para Cédula, E para Extranjero, G para Gubernamental)."],
+          ["Campos Requeridos (*)", "N° de documento, Nombre Completo o Razón Social, N° de teléfono y Dirección (domicilio fiscal)."],
+          ["Email (Opcional)", "Dirección de correo para el envío automático de la factura digital en PDF/XML."],
+          ["Agregar Cliente", "Valida los datos, guarda el perfil en el servidor local y lo asocia directamente a la cuenta actual."]
+        ]
+      },
+      {
+        id: 11,
+        title: "Paso 11: Cambiar Tarifa (Boleto Físico)",
+        etapa: 3,
+        image: "assets/11_cambiar_tarifa.jpg",
+        desc: "Permite redefinir la estructura tarifaria que se le cobrará a un ticket de estacionamiento físico. Las tarifas se administran y activan desde el Backoffice centralizado y el operador del POS solo puede seleccionar las que estén asignadas a la terminal.",
+        details: [
+          ["Tarifa para Pruebas (Ícono Estrella)", "Utilizada por técnicos para probar la facturación del sistema y la integración con la impresora fiscal sin generar importes reales."],
+          ["Moto (Ícono Motocicleta)", "Aplica la tarifa especial/plana configurada para vehículos de dos ruedas."],
+          ["Convenio (Ícono Ticket)", "Aplica convenios o descuentos previamente sellados por comercios autorizados."],
+          ["Tarifa Express (Ícono Camión)", "Diseñada para mensajeros o transportes de mercancía rápida que tienen tiempos de tolerancia especiales."]
+        ]
+      },
+      {
+        id: 12,
+        title: "Paso 12: Emisión de Ticket Perdido",
+        etapa: 4,
+        image: "assets/12_ticket_perdido.jpg",
+        desc: "Esta interfaz recopila los datos necesarios para facturar la penalidad y dar salida a un vehículo cuando el cliente extravió el boleto físico de entrada.",
+        details: [
+          ["Datos del Vehículo", "Marca, Modelo, Placa y Color (obligatorios para auditorías e informes)."],
+          ["Datos del Conductor", "Nombre Completo, Cédula, Teléfono y Dirección fiscal de respaldo legal."],
+          ["Validación y LPR", "Al presionar Validar, si la placa ingresada posee un registro de entrada LPR por cámaras, concilia el boleto original con el pago de la multa, liberando la placa. De lo contrario, se cobra el ticket perdido y el boleto original de entrada quedará pendiente en base de datos para auditoría manual."]
+        ]
+      },
+      {
+        id: 13,
+        title: "Paso 13: Buscar Paquetes - Inicio",
+        etapa: 4,
+        image: "assets/13_buscar_paquetes_inicio.jpg",
+        desc: "Formulario de inicio para verificar suscripciones, abonos corporativos o paquetes de tickets asociados a un cliente específico.",
+        details: [
+          ["Buscador", "Entrada de texto para buscar al cliente por nombre, RIF o correo electrónico."],
+          ["Verificar paquete", "Realiza la consulta en el servidor local (PLS) para recuperar las suscripciones activas del cliente."]
+        ]
+      },
+      {
+        id: 14,
+        title: "Paso 14: Buscar Paquetes - Resultados",
+        etapa: 4,
+        image: "assets/14_buscar_paquetes_resultados.jpg",
+        desc: "Muestra las suscripciones activas del cliente consultado, desglosando los tickets o usuarios asignados.",
+        details: [
+          ["Usuarios Frecuentes (SuperApp)", "Factura multiplicando la cantidad de usuarios activos por el precio unitario del abono."],
+          ["Tickets Sellados Prepago", "Cobro de abonos adquiridos por comercios. Se factura 1 paquete por el precio unitario."],
+          ["Tickets Sellados Pospago", "Cobro mensual a locatarios: calcula la cantidad de tickets sellados/usados por los clientes multiplicada por el precio de convenio."],
+          ["Indicador Rojo (!)", "La presencia del ícono rojo al lado del usuario o ticket indica que está elegible y pendiente por facturar en la caja actual."]
+        ]
+      },
+      {
+        id: 15,
+        title: "Paso 15: Generar Ticket de Caja",
+        etapa: 4,
+        image: "assets/15_generar_ticket.jpg",
+        desc: "Permite emitir manualmente un ticket físico de entrada al estacionamiento directamente desde el POS. Esta acción es restrictiva y requiere autorización de nivel Supervisor.",
+        details: [
+          ["Casos de Uso Comunes", "Falla de la máquina tiquetera del carril de entrada (atasco o red) o registro de proveedores/contratistas que cambian su ticket manual en caja."],
+          ["Selección de Fecha", "Permite parametrizar manualmente la fecha y hora de entrada para auditar cobros retroactivos."],
+          ["Generar Ticket", "Envía la orden de impresión térmica de la entrada y la registra en el servidor."]
+        ]
+      },
+      {
+        id: 16,
+        title: "Paso 16: Buscar Ticket - Inicio",
+        etapa: 4,
+        image: "assets/16_buscar_ticket_inicio.jpg",
+        desc: "Módulo alternativo para cobro de boletos en caja cuando el escáner de códigos de barra o código QR de la taquilla no logra leer el papel físico.",
+        details: [
+          ["Búsqueda manual", "El operador escribe el número impreso en el ticket (código numérico de 12 dígitos correlativo) y presiona el ícono de lupa."]
+        ]
+      },
+      {
+        id: 17,
+        title: "Paso 17: Buscar Ticket - Resultados",
+        etapa: 4,
+        image: "assets/17_buscar_ticket_resultados.jpg",
+        desc: "Muestra la información del boleto localizado para proceder con su facturación o copia física.",
+        details: [
+          ["Metadatos de Entrada", "Muestra el código de SKU, nombre de la tarifa aplicada y hora exacta de entrada."],
+          ["Cobrar", "Carga el ticket directamente a la grilla de facturación principal, permitiendo su cobro como si hubiese sido escaneado."],
+          ["Imprimir", "Reimprime el ticket de entrada con su código de barra correspondiente para entregárselo legible al usuario."]
+        ]
+      },
+      {
+        id: 18,
+        title: "Paso 18: Buscar Facturas - Inicio",
+        etapa: 4,
+        image: "assets/18_buscar_factura_inicio.jpg",
+        desc: "Permite consultar o reimprimir facturas que ya han sido cobradas en la caja actual, pero cuyos vehículos aún no han salido físicamente del estacionamiento.",
+        details: [
+          ["Buscador Inteligente", "Permite buscar por número de ticket, número fiscal de factura, cédula/RIF, nombre, correo o placa."]
+        ]
+      },
+      {
+        id: 19,
+        title: "Paso 19: Buscar Facturas - Resultados",
+        etapa: 4,
+        image: "assets/19_buscar_factura_resultados.jpg",
+        desc: "Muestra la factura fiscal cobrada y habilita reimpresiones de recibos o boletos de barrera.",
+        details: [
+          ["Ficha de Facturación", "Detalla el cliente, número de ticket correlativo, correlativo fiscal, fecha de entrada/pago y total cobrado."],
+          ["Ícono Impresora (Izquierda)", "Reimprime la factura fiscal o recibo correspondiente."],
+          ["Ícono Ticket (Derecha)", "Reimprime el ticket de salida con código de barras para habilitar la apertura de barrera. Si hay LPR, previsualiza la foto de seguridad."]
+        ]
+      },
+      {
+        id: 20,
+        title: "Paso 20: Registro de Pago - Opciones",
+        etapa: 3,
+        image: "assets/20_registro_pago_inicio.jpg",
+        desc: "Pasarela final de cobro. Muestra los métodos de pago habilitados, el total acumulado y los impuestos calculados automáticamente.",
+        details: [
+          ["Métodos de Pago (Columna Izquierda)", "Lista las opciones: Débito, Crédito, Pago Móvil, Efectivo Bs, Efectivo $, Ajuste, Financiado."],
+          ["Banda de Control", "Muestra el Total a cobrar, el Pago total cargado y el Vuelto. El botón Facturar permanece bloqueado (gris) hasta que el Pago cubra o supere el Total."]
+        ]
+      },
+      {
+        id: 21,
+        title: "Paso 21: Registro de Pago - Ingresar Monto",
+        etapa: 3,
+        image: "assets/21_registro_pago_monto.jpg",
+        desc: "Cuadro de diálogo para registrar el monto abonado por cada método de pago seleccionado.",
+        details: [
+          ["Llenado Automático", "El sistema coloca por defecto el saldo restante de la factura en el campo Monto."],
+          ["Agregar Pago", "Confirma el abono en la pasarela y actualiza los subtotales automáticamente."]
+        ]
+      },
+      {
+        id: 22,
+        title: "Paso 22: Registro de Pago - Total Completado",
+        etapa: 3,
+        image: "assets/22_registro_pago_listo.jpg",
+        desc: "Estado listo para emitir factura. Explica la combinación de pagos, el recargo del IGTF en divisas y la activación del proceso.",
+        details: [
+          ["Cálculo Automático IGTF", "El ingreso de divisas en efectivo (ej. $ 2,00 USD) calcula automáticamente el 3% de IGTF y lo suma en tiempo real al Total de la factura."],
+          ["Método AJUSTE", "Método exclusivo de 'Promotora Tántalo' para cuadrar contablemente el cobro del IGTF en divisas."],
+          ["Edición y Eliminación", "Haz clic en una tarjeta de pago para editar su monto. Para eliminarlo, arrástralo lateralmente para revelar el ícono de papelera."],
+          ["Facturar Activo", "Al cubrirse la totalidad del importe (Pago = Total), el botón Facturar en la esquina inferior derecha se activa (cambia a color azul)."]
+        ]
+      },
+      {
+        id: 23,
+        title: "Paso 23: Registro de Pago - Confirmación",
+        etapa: 3,
+        image: "assets/23_registro_pago_confirmacion.jpg",
+        desc: "Diálogo de seguridad previo a enviar los datos a la impresora fiscal.",
+        details: [
+          ["Pop-up de seguridad", "Evita dobles impresiones o errores fiscales. Muestra: ¿Está usted seguro que desea procesar el pago?"],
+          ["Aceptar", "Firma el cobro, la impresora fiscal emite la factura, se actualiza el ticket de salida y se envía el pulso de apertura de barrera."],
+          ["Volver", "Regresa a la pasarela para corregir datos."]
+        ]
+      },
+      {
+        id: 24,
+        title: "Paso 24: Nota de Crédito (Anulación)",
+        etapa: 4,
+        image: "assets/24_nota_credito.jpg",
+        desc: "Módulo administrativo y fiscal diseñado para anular facturas mal emitidas o reembolsar cobros erróneos de estacionamiento. Esta acción requiere obligatoriamente autorización de nivel Supervisor.",
+        details: [
+          ["Búsqueda por Factura", "El operador debe ingresar el número de factura fiscal afectada en el buscador superior. El sistema realiza la consulta y recupera los metadatos correspondientes."],
+          ["Llenado Automático de Datos", "Al encontrar la factura, se rellenan de forma segura los campos de Razón Social, RIF, número de factura, fecha y serial de la impresora fiscal."],
+          ["Anulación Total", "De acuerdo a la normativa fiscal, las notas de crédito se emiten siempre por el monto total de la factura afectada."],
+          ["Generar Nota de crédito", "La impresora fiscal emite el documento de anulación correspondiente para el archivo contable de la taquilla."]
+        ]
+      },
+      {
+        id: 25,
+        title: "Paso 25: Pre-cierre - Selección de Opciones",
+        etapa: 5,
+        image: "assets/25_precierre_opciones.jpg",
+        desc: "Acceso al módulo de corte parcial de caja y cambio de turno. Requiere permiso de Supervisor.",
+        details: [
+          ["Corte", "Genera un reporte parcial de ventas del cajero actual para auditoría interna, sin cerrar el turno ni desloguear al usuario de la terminal."],
+          ["Cerrar turno", "Finaliza formalmente el turno del cajero actual, emitiendo el reporte correspondiente y cerrando de forma automática su sesión para permitir el login del siguiente operador."]
+        ]
+      },
+      {
+        id: 26,
+        title: "Paso 26: Pre-cierre - Arqueo de Caja",
+        etapa: 5,
+        image: "assets/26_precierre_arqueo.jpg",
+        desc: "Auditoría financiera del pre-cierre o cambio de turno para conciliar la caja.",
+        details: [
+          ["Sección Efectivo (Bs y $)", "El supervisor u operador debe rellenar físicamente la columna Real (monto contado en caja). El sistema muestra la columna Teórico y calcula la Diferencia automáticamente."],
+          ["Sección Transacciones", "Muestra el desglose de cobros electrónicos teóricos (tarjeta, pago móvil) para conciliar con los reportes de cierre de los datáfonos."],
+          ["Cerrar caja", "Almacena los arqueos en base de datos e imprime el reporte X fiscal de auditoría en la ticketera."]
+        ]
+      },
+      {
+        id: 27,
+        title: "Paso 27: Cierre de Caja (Reporte Z)",
+        etapa: 5,
+        image: "assets/27_cierre_caja.jpg",
+        desc: "El Cierre de Caja es el proceso contable final que se realiza al terminar el día operativo del estacionamiento. Requiere obligatoriamente la autorización de nivel Supervisor.",
+        details: [
+          ["Arqueo Obligatorio", "Formulario de balanceo físico de caja (columna Real de efectivo en bolívares/dólares, y validación de vouchers de transacciones electrónicas)."],
+          ["Cierre y Emisión Z", "Al presionar Cerrar caja, envía la orden de cierre diario Z a la impresora fiscal (borrando memoria de trabajo diaria de la impresora y grabándola en memoria fiscal permanente). Sincroniza con la nube y bloquea la terminal en la pantalla de Login."]
+        ]
+      }
+    ];
+
+    /* VARIABLES GLOBALES */
+    let readSteps = new Set();
+
+    /* ELEMENTOS DOM */
+    const sidebarAccordion = document.getElementById("sidebar-accordion");
+    const contentPanel = document.getElementById("content-panel");
+    const progressBarFill = document.getElementById("progress-bar-fill");
+    const progressPercent = document.getElementById("progress-percent");
+    const themeToggleBtn = document.getElementById("theme-toggle-btn");
+    const themeIcon = document.getElementById("theme-icon");
+    const searchBox = document.getElementById("search-box");
+    const searchClearBtn = document.getElementById("search-clear-btn");
+    const sidebar = document.getElementById("sidebar");
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImage = document.getElementById("lightbox-image");
+
+    /* INICIALIZACIÓN */
+    document.addEventListener("DOMContentLoaded", () => {
+      loadProgress();
+      loadTheme();
+      renderManual();
+      setupSearch();
+      setupScrollHighlighting();
+    });
+
+    /* PERSISTENCIA DE TEMA */
+    themeToggleBtn.addEventListener("click", () => {
+      document.body.classList.toggle("light-theme");
+      const isLight = document.body.classList.contains("light-theme");
+      localStorage.setItem("theme", isLight ? "light" : "dark");
+      themeIcon.innerHTML = `<use href="#icon-${isLight ? 'sun' : 'moon'}"/>`;
+    });
+
+    function loadTheme() {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "light") {
+        document.body.classList.add("light-theme");
+        themeIcon.innerHTML = '<use href="#icon-sun"/>';
+      } else {
+        document.body.classList.remove("light-theme");
+        themeIcon.innerHTML = '<use href="#icon-moon"/>';
+      }
+    }
+
+    /* SISTEMA DE PROGRESO DE LECTURA (localStorage) */
+    function loadProgress() {
+      const saved = localStorage.getItem("manual_pos_progress");
+      if (saved) {
+        try {
+          readSteps = new Set(JSON.parse(saved));
+        } catch(e) {
+          readSteps = new Set();
+        }
+      }
+      updateProgressUI();
+    }
+
+    function saveProgress() {
+      localStorage.setItem("manual_pos_progress", JSON.stringify(Array.from(readSteps)));
+      updateProgressUI();
+    }
+
+    function updateProgressUI() {
+      const total = stepsData.length;
+      const readCount = readSteps.size;
+      const pct = Math.round((readCount / total) * 100);
+      progressBarFill.style.width = `${pct}%`;
+      progressPercent.textContent = `${pct}%`;
+    }
+
+    function toggleStepRead(stepId, event) {
+      if (event) event.stopPropagation();
+      
+      if (readSteps.has(stepId)) {
+        readSteps.delete(stepId);
+      } else {
+        readSteps.add(stepId);
+      }
+      saveProgress();
+
+      // Sincronizar elementos UI
+      const checkboxes = document.querySelectorAll(`.step-checkbox[data-id="${stepId}"]`);
+      checkboxes.forEach(cb => cb.classList.toggle("checked", readSteps.has(stepId)));
+
+      const readButtons = document.querySelectorAll(`.read-btn[data-id="${stepId}"]`);
+      readButtons.forEach(btn => {
+        const isRead = readSteps.has(stepId);
+        btn.classList.toggle("active", isRead);
+        btn.innerHTML = isRead 
+          ? `<svg viewBox="0 0 24 24"><use href="#icon-check"/></svg> Leído ✔`
+          : `<svg viewBox="0 0 24 24"><use href="#icon-check"/></svg> Marcar como leído`;
+      });
+    }
+
+    /* RENDERIZADO COMPLETO DEL MANUAL (SIDEBAR Y CONTENIDO) */
+    function renderManual() {
+      sidebarAccordion.innerHTML = "";
+      contentPanel.innerHTML = "";
+
+      // Agrupar pasos por Etapas
+      const grouped = {};
+      Object.keys(etapas).forEach(eNum => {
+        grouped[eNum] = [];
+      });
+      stepsData.forEach(step => {
+        grouped[step.etapa].push(step);
+      });
+
+      // Renderizar Etapas en el Sidebar y pasos en el Contenido
+      Object.keys(etapas).forEach(eNum => {
+        // Sidebar Etapa Group
+        const groupDiv = document.createElement("div");
+        groupDiv.className = "etapa-group";
+
+        const groupHeader = document.createElement("div");
+        groupHeader.className = "etapa-header";
+        groupHeader.textContent = etapas[eNum];
+        groupDiv.appendChild(groupHeader);
+
+        const stepList = document.createElement("div");
+        stepList.className = "step-list";
+
+        grouped[eNum].forEach(step => {
+          const isChecked = readSteps.has(step.id);
+          
+          // Sidebar Item
+          const sidebarItem = document.createElement("a");
+          sidebarItem.href = `#paso-${step.id}`;
+          sidebarItem.className = "sidebar-step-item";
+          sidebarItem.dataset.id = step.id;
+          sidebarItem.id = `sidebar-link-${step.id}`;
+          sidebarItem.onclick = (e) => {
+            e.preventDefault();
+            closeMobileSidebar();
+            
+            // Smooth Scroll
+            const targetCard = document.getElementById(`paso-${step.id}`);
+            if (targetCard) {
+              targetCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          };
+
+          sidebarItem.innerHTML = `
+            <div class="step-checkbox ${isChecked ? 'checked' : ''}" data-id="${step.id}" onclick="toggleStepRead(${step.id}, event)">
+              <svg viewBox="0 0 24 24"><use href="#icon-check"/></svg>
+            </div>
+            <span>Paso ${step.id.toString().padStart(2, '0')}: ${step.title.split(': ')[1]}</span>
+          `;
+          stepList.appendChild(sidebarItem);
+
+          // Contenido Card (Paso)
+          const card = document.createElement("section");
+          card.className = "step-card";
+          card.id = `paso-${step.id}`;
+
+          // Generar Tabla de detalles
+          let detailsRowsHTML = "";
+          if (step.details && step.details.length > 0) {
+            step.details.forEach(detail => {
+              detailsRowsHTML += `
+                <tr>
+                  <td class="detail-term">${escapeHtml(detail[0])}</td>
+                  <td class="detail-def">${escapeHtml(detail[1])}</td>
+                </tr>
+              `;
+            });
+          }
+
+          card.innerHTML = `
+            <header class="step-card-header">
+              <div class="step-title-area">
+                <div><span class="stage-badge">${etapas[step.etapa]}</span></div>
+                <h2 class="step-main-title">${escapeHtml(step.title)}</h2>
+              </div>
+              <div class="card-actions">
+                <button class="read-btn ${isChecked ? 'active' : ''}" data-id="${step.id}" onclick="toggleStepRead(${step.id})">
+                  <svg viewBox="0 0 24 24"><use href="#icon-check"/></svg>
+                  ${isChecked ? 'Leído ✔' : 'Marcar como leído'}
+                </button>
+              </div>
+            </header>
+
+            <div class="step-content-grid">
+              <div class="image-container" onclick="openLightbox('${step.image}')">
+                <img src="${step.image}" alt="Captura de la interfaz de ${step.title}" loading="lazy">
+              </div>
+              <div class="text-container">
+                <p class="step-description">${escapeHtml(step.desc)}</p>
+                <div class="details-table-wrapper">
+                  <table class="details-table">
+                    <thead>
+                      <tr>
+                        <th>Elemento / Acción</th>
+                        <th>Descripción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${detailsRowsHTML}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          `;
+          contentPanel.appendChild(card);
+        });
+
+        groupDiv.appendChild(stepList);
+        sidebarAccordion.appendChild(groupDiv);
+      });
+    }
+
+    /* SISTEMA DE BÚSQUEDA FLUIDO */
+    function setupSearch() {
+      searchBox.addEventListener("input", () => {
+        const query = searchBox.value.trim().toLowerCase();
+        if (query.length > 0) {
+          searchClearBtn.style.display = "block";
+          performSearch(query);
+        } else {
+          clearSearch();
+        }
+      });
+
+      searchClearBtn.addEventListener("click", () => {
+        searchBox.value = "";
+        clearSearch();
+      });
+    }
+
+    function clearSearch() {
+      searchClearBtn.style.display = "none";
+      
+      // Mostrar todos los pasos
+      document.querySelectorAll(".step-card").forEach(card => {
+        card.classList.remove("hidden");
+      });
+      document.querySelectorAll(".sidebar-step-item").forEach(item => {
+        item.style.display = "flex";
+      });
+      document.querySelectorAll(".etapa-group").forEach(group => {
+        group.style.display = "block";
+      });
+
+      // Limpiar marcas de resaltado
+      renderManual();
+    }
+
+    function performSearch(query) {
+      const matchingStepIds = new Set();
+
+      stepsData.forEach(step => {
+        let isMatch = false;
+
+        // Comprobar coincidencia en título y descripción
+        if (step.title.toLowerCase().includes(query) || step.desc.toLowerCase().includes(query)) {
+          isMatch = true;
+        }
+
+        // Comprobar coincidencia en detalles
+        step.details.forEach(detail => {
+          if (detail[0].toLowerCase().includes(query) || detail[1].toLowerCase().includes(query)) {
+            isMatch = true;
+          }
+        });
+
+        if (isMatch) {
+          matchingStepIds.add(step.id);
+        }
+      });
+
+      // Filtrar Cards de contenido
+      document.querySelectorAll(".step-card").forEach(card => {
+        const id = parseInt(card.id.split('-')[1]);
+        if (matchingStepIds.has(id)) {
+          card.classList.remove("hidden");
+          highlightCardText(card, query);
+        } else {
+          card.classList.add("hidden");
+        }
+      });
+
+      // Filtrar enlaces de sidebar
+      document.querySelectorAll(".sidebar-step-item").forEach(item => {
+        const id = parseInt(item.dataset.id);
+        if (matchingStepIds.has(id)) {
+          item.style.display = "flex";
+        } else {
+          item.style.display = "none";
+        }
+      });
+
+      // Ocultar grupos de etapa vacíos en el sidebar
+      document.querySelectorAll(".etapa-group").forEach(group => {
+        const visibleItems = group.querySelectorAll(".sidebar-step-item[style='display: flex;']");
+        group.style.display = visibleItems.length > 0 ? "block" : "none";
+      });
+    }
+
+    function highlightCardText(card, query) {
+      // Resaltar título
+      const titleEl = card.querySelector(".step-main-title");
+      const originalTitle = titleEl.textContent;
+      titleEl.innerHTML = highlightHTML(originalTitle, query);
+
+      // Resaltar descripción
+      const descEl = card.querySelector(".step-description");
+      const originalDesc = descEl.textContent;
+      descEl.innerHTML = highlightHTML(originalDesc, query);
+
+      // Resaltar tabla de detalles
+      card.querySelectorAll(".details-table tbody tr").forEach(row => {
+        const termEl = row.querySelector(".detail-term");
+        const defEl = row.querySelector(".detail-def");
+
+        termEl.innerHTML = highlightHTML(termEl.textContent, query);
+        defEl.innerHTML = highlightHTML(defEl.textContent, query);
+      });
+    }
+
+    function highlightHTML(text, query) {
+      if (!query) return escapeHtml(text);
+      const escapedQuery = escapeHtml(query);
+      const reg = new RegExp(`(${escapedQuery})`, "gi");
+      return escapeHtml(text).replace(reg, "<mark>$1</mark>");
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    /* SCROLL HIGHLIGHTING (Detección del paso activo en pantalla) */
+    function setupScrollHighlighting() {
+      const cards = document.querySelectorAll(".step-card");
+      
+      const observerOptions = {
+        root: null,
+        rootMargin: "-15% 0px -75% 0px", // Evalúa cuando el elemento está en la parte superior-media
+        threshold: 0
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const stepId = entry.target.id.split('-')[1];
+            
+            // Quitar clase active de todos los links y ponerla en el correspondiente
+            document.querySelectorAll(".sidebar-step-item").forEach(item => {
+              item.classList.toggle("active", item.dataset.id === stepId);
+            });
+
+            // Auto-scroll del sidebar para mantener el ítem activo visible
+            const activeLink = document.getElementById(`sidebar-link-${stepId}`);
+            if (activeLink) {
+              activeLink.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }
+        });
+      }, observerOptions);
+
+      cards.forEach(card => observer.observe(card));
+    }
+
+    /* LIGHTBOX ZOOM */
+    function openLightbox(imageSrc) {
+      lightboxImage.src = imageSrc;
+      lightbox.style.display = "flex";
+      setTimeout(() => {
+        lightbox.classList.add("active");
+      }, 10);
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove("active");
+      setTimeout(() => {
+        lightbox.style.display = "none";
+      }, 200);
+    }
+
+    /* CONTROLES MÓVILES */
+    function toggleMobileSidebar() {
+      sidebar.classList.toggle("mobile-open");
+    }
+
+    function closeMobileSidebar() {
+      sidebar.classList.remove("mobile-open");
+    }
+  </script>
+</body>
+</html>
